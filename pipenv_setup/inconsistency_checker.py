@@ -225,20 +225,28 @@ class InconsistencyChecker:
         ('numpy', '==1.2.3,>1.2,<2')
         >>> InconsistencyChecker._separate_name_version("numpy")
         ('numpy', '')
+        >>> InconsistencyChecker._separate_name_version("requests[socks]==2.23.0")
+        ('requests', '==2.23.0')
         """
         name = ""
         version_reqs_string = ""
 
+        in_extras = False
         met_comp_ops = False
 
         for c in package_string:
             if c in ("=", "<", ">", "!"):
                 met_comp_ops = True
+            elif c == "[":
+                in_extras = True
             elif c == ";":  # met other markers, which we ignore
                 break
             if c != " ":
                 if met_comp_ops:
                     version_reqs_string += c
+                elif in_extras:  # ignore extras - they were expanded into install_requires already
+                    if c == "]":
+                        in_extras = False
                 else:
                     name += c
         return name.replace(" ", ""), version_reqs_string.replace(" ", "")
