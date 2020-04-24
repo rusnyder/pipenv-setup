@@ -313,6 +313,22 @@ def test_check_file_install_requires_missing(
         assert e.value.code == 1
 
 
+@pytest.mark.parametrize(("source_pipfile_dirname",), [("extra_1",)])
+def test_check_extras(
+    capsys, tmp_path, shared_datadir, source_pipfile_dirname
+):  # type: (Any, Path, Path, str) -> None
+    """
+    Extras are represented as `dep[extra]` in setup.py, which the inconsistency
+    checker needs to unpack when comparing.
+    """
+    pipfile_dir = shared_datadir / source_pipfile_dirname
+    for filename in ("Pipfile", "Pipfile.lock", "setup.py"):
+        copy_file(pipfile_dir / filename, tmp_path)
+    # copy_file(shared_datadir / "minimal_empty_setup.py", tmp_path, "setup.py")
+    with cwd(tmp_path):
+        cmd(argv=["", "check"])
+
+
 @pytest.mark.parametrize(("source_pipfile_dirname",), [("lock_package_broken_0",)])
 def test_sync_lock_file_package_broken(
     tmp_path, shared_datadir, source_pipfile_dirname
